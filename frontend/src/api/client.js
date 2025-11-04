@@ -1,8 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api"
+  baseURL: import.meta.env.VITE_API_BASE_URL || "https://finza-26h9.onrender.com"
 });
+
 
 export const setAuthToken = (token) => {
   if (token) {
