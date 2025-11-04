@@ -1,4 +1,4 @@
-import { supabase } from "../utils/supabaseClient.js";
+import { supabaseAdmin } from "../utils/supabaseClient.js";
 import { convertAmount } from "./currencyService.js";
 import { config } from "../config/env.js";
 
@@ -13,13 +13,17 @@ const withDualCurrency = (expense) => {
     secondary_currency: expense.secondary_currency || config.currencies.secondary,
     totals: {
       base: amount,
-      secondary: convertAmount(amount, expense.currency || config.currencies.base, expense.secondary_currency || config.currencies.secondary)
-    }
+      secondary: convertAmount(
+        amount,
+        expense.currency || config.currencies.base,
+        expense.secondary_currency || config.currencies.secondary
+      ),
+    },
   };
 };
 
 export const fetchExpenses = async (userId) => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(EXPENSES_TABLE)
     .select("*")
     .eq("user_id", userId)
@@ -36,10 +40,15 @@ export const createExpense = async ({ expense, user }) => {
     currency: expense.currency || config.currencies.base,
     secondary_currency: expense.secondary_currency || config.currencies.secondary,
     amount: Number(expense.amount),
-    incurred_at: expense.incurred_at || new Date().toISOString()
+    incurred_at: expense.incurred_at || new Date().toISOString(),
   };
 
-  const { data, error } = await supabase.from(EXPENSES_TABLE).insert(payload).select().single();
+  const { data, error } = await supabaseAdmin
+    .from(EXPENSES_TABLE)
+    .insert(payload)
+    .select()
+    .single();
+
   if (error) throw error;
   return withDualCurrency(data);
 };
@@ -49,10 +58,10 @@ export const updateExpense = async ({ id, expense, user }) => {
     ...expense,
     currency: expense.currency || config.currencies.base,
     secondary_currency: expense.secondary_currency || config.currencies.secondary,
-    amount: Number(expense.amount)
+    amount: Number(expense.amount),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(EXPENSES_TABLE)
     .update(payload)
     .eq("id", id)
@@ -65,7 +74,7 @@ export const updateExpense = async ({ id, expense, user }) => {
 };
 
 export const deleteExpense = async ({ id, user }) => {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from(EXPENSES_TABLE)
     .delete()
     .eq("id", id)
