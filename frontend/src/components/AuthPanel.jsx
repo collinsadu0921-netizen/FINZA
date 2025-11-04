@@ -10,12 +10,33 @@ export const AuthPanel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+    useEffect(() => {
+    // 1. Handle return from Google OAuth
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+
+    if (code) {
+      supabase.auth.exchangeCodeForSession({ code }).then(({ data, error }) => {
+        if (error) {
+          console.error("OAuth exchange error:", error.message);
+          return;
+        }
+        if (data?.session) {
+          setSession(data.session);
+          setAuthToken(data.session.access_token);
+          // Remove code param from URL
+          window.history.replaceState({}, document.title, "/");
+        }
+      });
+    }
+
+    // 2. Normal session setup
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setAuthToken(data.session?.access_token);
     });
 
+    // 3. Auth state listener
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setAuthToken(newSession?.access_token);
