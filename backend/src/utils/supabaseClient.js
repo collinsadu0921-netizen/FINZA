@@ -3,9 +3,12 @@ import { config } from "../config/env.js";
 
 export const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
   auth: {
-    persistSession: false
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   }
 });
+
 
 export const supabaseAdmin = createClient(
   config.supabaseUrl,
